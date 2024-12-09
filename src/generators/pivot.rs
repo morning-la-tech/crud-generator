@@ -1,7 +1,7 @@
 use crate::models::{Relation, Resource};
 use tera::{Context, Tera};
 
-pub fn generate_pivot_file(tera: &Tera, input: &Resource, relation: &Relation) {
+pub fn generate_pivot_file(tera: &mut Tera, input: &Resource, relation: &Relation) {
     if let Some(pivot_table) = &relation.pivot_table {
         let mut pivot_context = Context::new();
         pivot_context.insert("pivot_table_name", pivot_table);

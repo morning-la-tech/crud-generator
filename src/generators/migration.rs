@@ -3,7 +3,7 @@ use std::fs::create_dir_all;
 use std::path::Path;
 use tera::{Context, Tera};
 
-pub fn generate_migration(tera: &Tera, resource: &Resource) {
+pub fn generate_migration(tera: &mut Tera, resource: &Resource) {
     let migration_dir = "./migration/src";
 
     if !Path::new(migration_dir).exists() {

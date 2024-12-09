@@ -5,7 +5,7 @@ use std::io::Write;
 use std::path::Path;
 use tera::{Context, Tera};
 
-pub fn generate_files(tera: &Tera, input: &Resource) {
+pub fn generate_files(tera: &mut Tera, input: &Resource) {
     let mut context = Context::new();
     context.insert("resource_name", &input.resource_name);
 
@@ -74,9 +74,11 @@ pub fn generate_files(tera: &Tera, input: &Resource) {
     generate_test_files(tera, &input.resource_name, &context);
 }
 
-fn generate_test_files(tera: &Tera, resource_name: &str, context: &Context) {
+fn generate_test_files(tera: &mut Tera, resource_name: &str, context: &Context) {
     // Generate the test file
-    let rendered = tera.render("test.rs.tera", context).unwrap();
+    let rendered = tera
+        .render_str(include_str!("../../templates/test.rs.tera"), context)
+        .unwrap();
     let test_path = format!("./tests/{}", resource_name.to_lowercase());
     let test_file_path = format!("{}/crud_{}.rs", test_path, resource_name.to_lowercase());
 
@@ -101,7 +103,7 @@ fn generate_test_files(tera: &Tera, resource_name: &str, context: &Context) {
 }
 
 pub fn generate_file(
-    tera: &Tera,
+    tera: &mut Tera,
     template: &str,
     folder: &str,
     resource_name: &str,

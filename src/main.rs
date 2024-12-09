@@ -61,13 +61,13 @@ fn main() {
     tera.register_filter("plural", plural_filter);
     tera.register_filter("snake_case_to_kebab_case", snake_case_to_kebab_case_filter);
 
-    generate_migration(&tera, &input);
-    generate_files(&tera, &input);
+    generate_migration(&mut tera, &input);
+    generate_files(&mut tera, &input);
 
     if let Some(relations) = &input.relations {
         for relation in relations {
             if relation.r#type == "many_to_many" {
-                generate_pivot_file(&tera, &input, relation);
+                generate_pivot_file(&mut tera, &input, relation);
             }
         }
     }
