@@ -77,7 +77,7 @@ fn main() {
 fn format_generated_code() {
     eprintln!("\nFormatting generated files...");
 
-    let format_result = Command::new("cargo").arg("fmt").current_dir("..").status();
+    let format_result = Command::new("cargo").arg("fmt").current_dir(".").status();
 
     match format_result {
         Ok(status) => {
@@ -94,7 +94,7 @@ fn format_generated_code() {
 
     let migration_format_result = Command::new("cargo")
         .arg("fmt")
-        .current_dir("../migration")
+        .current_dir("./migration")
         .status();
 
     match migration_format_result {

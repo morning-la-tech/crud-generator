@@ -22,14 +22,14 @@ pub fn generate_files(tera: &Tera, input: &Resource) {
     let base_folders = vec!["models", "handlers", "repositories", "managers", "payloads"];
 
     for folder in &base_folders {
-        let folder_path = format!("../src/{}", folder);
+        let folder_path = format!("./src/{}", folder);
         if !Path::new(&folder_path).exists() {
             create_dir_all(&folder_path).unwrap();
         }
     }
 
     // Create tests directory if it doesn't exist
-    let tests_path = format!("../tests/{}", input.resource_name.to_lowercase());
+    let tests_path = format!("./tests/{}", input.resource_name.to_lowercase());
     if !Path::new(&tests_path).exists() {
         create_dir_all(&tests_path).unwrap();
     }
@@ -77,7 +77,7 @@ pub fn generate_files(tera: &Tera, input: &Resource) {
 fn generate_test_files(tera: &Tera, resource_name: &str, context: &Context) {
     // Generate the test file
     let rendered = tera.render("test.rs.tera", context).unwrap();
-    let test_path = format!("../tests/{}", resource_name.to_lowercase());
+    let test_path = format!("./tests/{}", resource_name.to_lowercase());
     let test_file_path = format!("{}/crud_{}.rs", test_path, resource_name.to_lowercase());
 
     let mut file = File::create(&test_file_path).unwrap();
@@ -91,7 +91,7 @@ fn generate_test_files(tera: &Tera, resource_name: &str, context: &Context) {
         .unwrap();
 
     // Update main tests/mod.rs if needed
-    let main_mod_path = "../tests/mod.rs";
+    let main_mod_path = "./tests/mod.rs";
     if !Path::new(main_mod_path).exists() {
         let mut main_mod_file = File::create(main_mod_path).unwrap();
         main_mod_file.write_all(b"pub mod common;\n").unwrap();
@@ -114,9 +114,9 @@ pub fn generate_file(
 
     let rendered = tera.render(template, context).unwrap();
     let folder_path = if folder == "migration/src" {
-        format!("../{}", folder)
+        format!("./{}", folder)
     } else {
-        format!("../src/{}", folder)
+        format!("./src/{}", folder)
     };
 
     if !Path::new(&folder_path).exists() {
@@ -137,6 +137,6 @@ pub fn generate_file(
     let mut file = File::create(&folder_path).unwrap();
     file.write_all(rendered.as_bytes()).unwrap();
     if folder != "migration/src" {
-        append_to_mod_file(folder, &file_name, &format!("../src/{}/mod.rs", folder));
+        append_to_mod_file(folder, &file_name, &format!("./src/{}/mod.rs", folder));
     }
 }

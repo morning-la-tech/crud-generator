@@ -12,7 +12,7 @@ fn capitalize(s: &str) -> String {
 }
 
 pub fn check_if_files_exist(resource_name: &str) -> Result<(), String> {
-    let base_path = "../src";
+    let base_path = "./src";
     let files_to_check = vec![
         (
             "model",
