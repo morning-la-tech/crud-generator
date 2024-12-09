@@ -112,7 +112,20 @@ pub fn generate_file(
         _ => &format!("{}_{}", resource_name, template.split('.').next().unwrap()),
     };
 
-    let rendered = tera.render(template, context).unwrap();
+    let template_content = match template {
+        "model.rs.tera" => include_str!("../../templates/model.rs.tera"),
+        "repository.rs.tera" => include_str!("../../templates/repository.rs.tera"),
+        "handler.rs.tera" => include_str!("../../templates/handler.rs.tera"),
+        "migration.rs.tera" => include_str!("../../templates/migration.rs.tera"),
+        "pivot_model.rs.tera" => include_str!("../../templates/pivot_model.rs.tera"),
+        "payloads.rs.tera" => include_str!("../../templates/payloads.rs.tera"),
+        "test.rs.tera" => include_str!("../../templates/test.rs.tera"),
+        "manager.rs.tera" => include_str!("../../templates/manager.rs.tera"),
+        "relation.rs.tera" => include_str!("../../templates/relation.rs.tera"),
+        _ => panic!("Unknown template: {}", template),
+    };
+
+    let rendered = tera.render_str(template_content, context).unwrap();
     let folder_path = if folder == "migration/src" {
         format!("./{}", folder)
     } else {
