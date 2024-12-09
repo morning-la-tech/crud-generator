@@ -5,7 +5,7 @@ edition = "2021"
 description = "A Rust tool to generate CRUD files for an HTTP API"
 repository = "https://github.com/morning-la-tech/crud-generator"
 license = "MIT"
-categories = ["command-line-utilities", "codegen"]
+categories = ["web-programming", "template-engine", "development-tools"]
 keywords = ["crud", "codegen", "database", "seaorm"]
 
 [dependencies]
