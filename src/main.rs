@@ -23,6 +23,7 @@ fn main() {
     }
 
     let resource_file_path = &args[1];
+    eprintln!("\nUsing resource JSON file: {}", resource_file_path);
     let input: Resource = match serde_json::from_reader(File::open(resource_file_path).unwrap()) {
         Ok(resource) => resource,
         Err(e) => {
