@@ -1,0 +1,39 @@
+use sea_orm_migration::prelude::*;
+
+#[derive(DeriveMigrationName)]
+pub struct Migration;
+
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager.create_table(
+            Table::create()
+                .table({{ resource_name | pascal_case }}::Table)
+                .if_not_exists()
+                {% for field in fields %}
+                .col(
+                    ColumnDef::new({{ resource_name | pascal_case }}::{{ field.0 | pascal_case }})
+                        .{{ field.1 | snake_case }}()
+                        {% if field.2 %}.primary_key(){% endif %}
+                        {% if field.3 %}.unique_key(){% endif %}
+                        {% if field.4 %}{% else %}.not_null(){% endif %}
+                )
+                {% endfor %}
+                .to_owned(),
+        ).await
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .drop_table(Table::drop().table({{ resource_name | pascal_case }}::Table).to_owned())
+            .await
+    }
+}
+
+#[derive(Iden)]
+enum {{ resource_name | pascal_case }} {
+    Table,
+    {% for field in fields %}
+    {{ field.0 | pascal_case }},
+    {% endfor %}
+}

@@ -1,0 +1,51 @@
+{
+  "resource_name": "author",
+  "fields": [
+    {
+      "name": "uuid",
+      "field_type": "Uuid",
+      "primary_key": true,
+      "nullable": false
+    },
+    {
+      "name": "email",
+      "field_type": "String",
+      "unique": true,
+      "nullable": false
+    },
+    {
+      "name": "name",
+      "field_type": "String",
+      "nullable": true
+    }
+  ],
+  "relations": [
+    {
+      "type": "has_one",
+      "related_entity": "profile"
+    },
+    {
+      "type": "has_many",
+      "related_entity": "post"
+    },
+    {
+      "type": "many_to_many",
+      "related_entity": "role",
+      "pivot_table": "author_role",
+      "pivot_table_fields": [
+        {
+          "name": "uuid",
+          "field_type": "Uuid"
+        },
+        {
+          "name": "author_uuid",
+          "field_type": "Uuid"
+        },
+        {
+          "name": "role_uuid",
+          "field_type": "Uuid"
+        }
+      ]
+    }
+  ]
+}

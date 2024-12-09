@@ -1,0 +1,155 @@
+use crate::managers::{{ resource_name | snake_case }}_manager::{{ resource_name | pascal_case }}Manager;
+use crate::models::{{ resource_name | snake_case }}::Model as {{ resource_name | pascal_case }};
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload};
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Update{{ resource_name | pascal_case }}Payload};
+use actix_web::{get, http::StatusCode, post, put, delete, web, web::Path, Responder};
+use standard_lib::handlers::respond_json;
+use utoipa::OpenApi;
+use register_routes::{auto_register, generate_register_service};
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(create, find_one, find, update, delete),
+    components(schemas({{ resource_name | pascal_case }}, Create{{ resource_name | pascal_case }}Payload, Update{{ resource_name | pascal_case }}Payload))
+)]
+pub(super) struct {{ resource_name | pascal_case }}ApiDoc;
+
+#[utoipa::path(
+    summary="POST {{ resource_name | pascal_case }}",
+    description="Create {{ resource_name | snake_case_to_kebab_case }}",
+    responses(
+        (
+            status=CREATED,
+            description="{{ resource_name | pascal_case }} created successfully",
+            body={{ resource_name | pascal_case }}
+        )
+    )
+)]
+#[auto_register("/{{ resource_name | plural | snake_case_to_kebab_case }}")]
+#[post("")]
+pub async fn create(
+    {{ resource_name | snake_case }}_manager: web::Data<{{ resource_name | pascal_case }}Manager>,
+    payload: web::Json<Create{{ resource_name | pascal_case }}Payload>,
+) -> impl Responder {
+    respond_json(
+        {{ resource_name | snake_case }}_manager.create(payload.into_inner()).await?,
+        StatusCode::CREATED,
+    )
+}
+
+#[utoipa::path(
+    summary="GET one {{ resource_name | snake_case }}",
+    description="Get one {{ resource_name | snake_case }}",
+    params((
+        "uuid"=String,
+        Path,
+        description="{{ resource_name | pascal_case }} database uuid to get"
+    )),
+    responses(
+        (
+        status=OK,
+        description="{{ resource_name | pascal_case }} found successfully",
+        body=Vec<{{ resource_name | pascal_case }}>
+        ),
+        (
+        status=NOT_FOUND,
+        description="{{ resource_name | pascal_case }} was not found"
+        )
+    ),
+)]
+#[auto_register("/{{ resource_name | plural | snake_case_to_kebab_case }}")]
+#[get("/{uuid}")]
+pub async fn find_one(
+    {{ resource_name | snake_case }}_manager: web::Data<{{ resource_name | pascal_case }}Manager>,
+    uuid: Path<String>,
+) -> impl Responder {
+    respond_json(
+        {{ resource_name | snake_case }}_manager.find_one(uuid.to_string()).await?,
+        StatusCode::OK,
+    )
+}
+
+#[utoipa::path(
+    summary="GET {{ resource_name | plural | snake_case }}",
+    description="Get {{ resource_name | plural | snake_case }}",
+    responses(
+        (
+        status=OK,
+        description="{{ resource_name | pascal_case }}s found successfully",
+        body=Vec<{{ resource_name | pascal_case }}>
+        )
+    ),
+)]
+#[auto_register("/{{ resource_name | plural | snake_case_to_kebab_case }}")]
+#[get("")]
+pub async fn find(
+    {{ resource_name | snake_case }}_manager: web::Data<{{ resource_name | pascal_case }}Manager>
+) -> impl Responder {
+    respond_json(
+        {{ resource_name | snake_case }}_manager.find().await?,
+        StatusCode::OK,
+    )
+}
+
+#[utoipa::path(
+    summary="PUT {{ resource_name | pascal_case }}",
+    description="Update {{ resource_name | snake_case }}",
+    params((
+        "uuid"=String,
+        Path,
+        description="{{ resource_name | pascal_case }} database uuid to update"
+    )),
+    responses(
+        (
+        status=OK,
+        description="{{ resource_name | pascal_case }} updated successfully",
+        body={{ resource_name | pascal_case }}
+        )
+    )
+)]
+#[auto_register("/{{ resource_name | plural | snake_case_to_kebab_case }}")]
+#[put("/{uuid}")]
+pub async fn update(
+    {{ resource_name | snake_case }}_manager: web::Data<{{ resource_name | pascal_case }}Manager>,
+    uuid: Path<String>,
+    payload: web::Json<Update{{ resource_name | pascal_case }}Payload>,
+) -> impl Responder {
+    respond_json(
+        {{ resource_name | snake_case }}_manager.update(uuid.to_string(), payload.into_inner()).await?,
+        StatusCode::OK,
+    )
+}
+
+#[utoipa::path(
+    summary="DELETE one {{ resource_name | snake_case }}",
+    description="Delete one {{ resource_name | snake_case }}",
+    params((
+    "uuid"=String,
+    Path,
+    description="{{ resource_name | pascal_case }} database uuid to delete"
+    )),
+    responses(
+        (
+        status=OK,
+        description="{{ resource_name | pascal_case }} deleted successfully",
+        body=Vec<{{ resource_name | pascal_case }}>
+        ),
+        (
+        status=NOT_FOUND,
+        description="{{ resource_name | pascal_case }} was not found"
+        )
+    ),
+)]
+#[auto_register("/{{ resource_name | plural | snake_case_to_kebab_case }}")]
+#[delete("/{uuid}")]
+pub async fn delete(
+    {{ resource_name | snake_case }}_manager: web::Data<{{ resource_name | pascal_case }}Manager>,
+    uuid: Path<String>,
+) -> impl Responder {
+    respond_json(
+        {{ resource_name | snake_case }}_manager.delete(uuid.to_string()).await?,
+        StatusCode::OK,
+    )
+}
+
+generate_register_service!(["/{{ resource_name | plural | snake_case_to_kebab_case }}", use_scope = true ]);

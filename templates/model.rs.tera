@@ -1,0 +1,62 @@
+use chrono::{DateTime, Utc};
+use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload, Update{{ resource_name | pascal_case }}Payload};
+use utoipa::ToSchema;
+use uuid::{NoContext, Timestamp};
+
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Deserialize, Serialize, ToSchema)]
+#[sea_orm(table_name = "{{ resource_name | snake_case }}")]
+pub struct Model {
+    {% for field in fields %}
+    {% if field.primary_key %}
+    #[sea_orm(primary_key)]
+    {% endif %}
+    pub {{ field.name }}: {% if field.nullable == true %}Option<{% endif %}{{ field.field_type }}{% if field.nullable == true %}>{% endif %},
+    {% endfor %}
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    {% for relation in relations %}
+    #[sea_orm(
+        {{ relation.type }} = "super::{{ relation.related_entity | snake_case }}::Entity"
+        {% if relation.type == "belongs_to" %}
+        , from = "Column::{{ relation.from_column }}", to = "super::{{ relation.related_entity | snake_case }}::Column::{{ relation.to_column }}"
+        {% endif %}
+    )]
+    {{ relation.related_entity | pascal_case }},
+    {% endfor %}
+}
+
+impl ActiveModelBehavior for ActiveModel {}
+
+impl From<Create{{ resource_name | pascal_case }}Payload> for Model {
+    fn from(payload: Create{{ resource_name | pascal_case }}Payload) -> Self {
+        Self {
+            {% for field in fields %}
+            {% if field.name == "uuid" %}
+            uuid: Uuid::new_v7(Timestamp::now(NoContext)),
+            {% elif field.name == "created_at" or field.name == "updated_at" %}
+            {{ field.name }}: chrono::Utc::now(),
+            {% else %}
+            {{ field.name }}: payload.{{ field.name }},
+            {% endif %}
+            {% endfor %}
+        }
+    }
+}
+
+impl From<Update{{ resource_name | pascal_case }}Payload> for Model {
+    fn from(payload: Update{{ resource_name | pascal_case }}Payload) -> Self {
+        Self {
+            {% for field in fields %}
+            {% if field.name == "created_at" or field.name == "updated_at" %}
+            {{ field.name }}: chrono::Utc::now(),
+            {% else %}
+            {{ field.name }}: payload.{{ field.name }},
+            {% endif %}
+            {% endfor %}
+        }
+    }
+}

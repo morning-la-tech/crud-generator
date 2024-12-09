@@ -1,0 +1,58 @@
+use crate::repositories::{{ resource_name | snake_case }}_repository::{{ resource_name | pascal_case }}Repository;
+use std::sync::Arc;
+use sea_orm::DbErr;
+use crate::models::{{ resource_name | snake_case }}::Model as {{ resource_name | pascal_case }};
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload, Update{{ resource_name | pascal_case }}Payload};
+use sea_orm::prelude::Uuid;
+
+{# {{ resource_name | plural }} #}
+#[derive(Clone)]
+pub struct {{ resource_name | pascal_case }}Manager {
+    repository: Arc<dyn {{ resource_name | pascal_case }}Repository>,
+}
+
+impl {{ resource_name | pascal_case }}Manager {
+    pub fn new(repository: Arc<dyn {{ resource_name | pascal_case }}Repository>) -> Self {
+        {{ resource_name | pascal_case }}Manager { repository }
+    }
+
+    pub async fn create(
+        &self,
+        payload: Create{{ resource_name | pascal_case }}Payload
+    ) -> Result<{{ resource_name | pascal_case }}, DbErr> {
+        let new_{{ resource_name | snake_case }} = {{ resource_name | pascal_case }}::from(payload);
+
+        self.repository.create(new_{{ resource_name | snake_case }}).await
+    }
+
+    pub async fn find(&self) -> Result<Vec<{{ resource_name | pascal_case }}>, DbErr> {
+        self.repository.find().await
+    }
+
+    pub async fn find_one(
+        &self,
+        uuid_{{ resource_name | snake_case }}: String,
+    ) -> Result<{{ resource_name | pascal_case }}, DbErr> {
+        let uuid = Uuid::parse_str(&uuid_{{ resource_name | snake_case }}).unwrap_or(Uuid::nil());
+        self.repository
+            .find_by_uuid(uuid).await
+    }
+
+    pub async fn update(
+        &self,
+        uuid: String,
+        payload: Update{{ resource_name | pascal_case }}Payload
+    ) -> Result<{{ resource_name | pascal_case }}, DbErr> {
+        self.repository
+            .update(uuid, payload).await
+    }
+
+    pub async fn delete(
+        &self,
+        uuid_{{ resource_name | snake_case }}: String,
+    ) -> Result<String, DbErr> {
+        let uuid = Uuid::parse_str(&uuid_{{ resource_name | snake_case }}).unwrap_or(Uuid::nil());
+        self.repository
+            .delete(uuid).await
+    }
+}

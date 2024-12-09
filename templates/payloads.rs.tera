@@ -1,0 +1,23 @@
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use validator::Validate;
+use utoipa::ToSchema;
+use uuid::Uuid;
+
+#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
+pub struct Create{{ resource_name | pascal_case }}Payload {
+    {% for field in fields %}
+    {% if field.name != "uuid" and field.name != "created_at" and field.name != "updated_at" %}
+    pub {{ field.name }}: {% if field.nullable == true %}Option<{% endif %}{{ field.field_type }}{% if field.nullable == true %}>{% endif %},
+    {% endif %}
+    {% endfor %}
+}
+
+#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
+pub struct Update{{ resource_name | pascal_case }}Payload {
+    {% for field in fields %}
+    {% if field.name != "created_at" and field.name != "updated_at" %}
+    pub {{ field.name }}: {% if field.nullable == true %}Option<{% endif %}{{ field.field_type }}{% if field.nullable == true %}>{% endif %},
+    {% endif %}
+    {% endfor %}
+}

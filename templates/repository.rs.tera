@@ -1,0 +1,99 @@
+use async_trait::async_trait;
+use crate::models::{{ resource_name | snake_case }}::{Model as {{ resource_name | pascal_case }}};
+use sea_orm::{DbErr};
+use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set};
+use crate::models::{{ resource_name | snake_case }};
+use crate::models::{{ resource_name | snake_case }}::Entity as {{ resource_name | pascal_case }}Entity;
+use std::sync::Arc;
+use sea_orm::prelude::Uuid;
+use standard_lib::sea_orm::Repository;
+use crate::payloads::{{ resource_name | snake_case }}_payloads::Update{{ resource_name | pascal_case }}Payload;
+use sea_orm::Unchanged;
+
+#[async_trait]
+pub trait {{ resource_name | pascal_case }}Repository: Send + Sync {
+    async fn create(&self, {{ resource_name | snake_case }}: {{ resource_name | pascal_case }}) -> Result<{{ resource_name | pascal_case }}, DbErr>;
+    async fn find_by_uuid(&self, uuid: Uuid) -> Result<{{ resource_name | pascal_case }}, DbErr>;
+    async fn find(&self) -> Result<Vec<{{ resource_name | pascal_case }}>, DbErr>;
+    async fn update(
+        &self,
+        uuid: String,
+        {{ resource_name | snake_case }}: Update{{ resource_name | pascal_case }}Payload,
+    ) -> Result<{{ resource_name | pascal_case }}, DbErr>;
+    async fn delete(&self, uuid: Uuid) -> Result<String, DbErr>;
+}
+
+#[derive(Repository)]
+pub struct Concrete{{ resource_name | pascal_case }}Repository {
+    db: Arc<DatabaseConnection>,
+}
+
+#[async_trait]
+impl {{ resource_name | pascal_case }}Repository for Concrete{{ resource_name | pascal_case }}Repository {
+    async fn create(&self, {{ resource_name | snake_case }}: {{ resource_name | pascal_case }}) -> Result<{{ resource_name | pascal_case }}, DbErr> {
+        let active_{{ resource_name | snake_case }} = {{ resource_name | snake_case }}::ActiveModel {
+            {% for field in fields %}
+            {{ field.name }}: Set({{ resource_name | snake_case }}.{{ field.name }}),
+            {% endfor %}
+        };
+        let res = active_{{ resource_name | snake_case }}.insert(&*self.db).await?;
+        Ok(res)
+    }
+
+    async fn find_by_uuid(&self, uuid: Uuid) -> Result<{{ resource_name | pascal_case }}, DbErr> {
+        let {{ resource_name | snake_case }} = {{ resource_name | pascal_case }}Entity::find_by_id(uuid).one(&*self.db).await?;
+        match {{ resource_name | snake_case }} {
+            Some(res) => Ok(res),
+            None => Err(DbErr::RecordNotFound(format!("{{ resource_name | pascal_case }} with id {} not found", uuid))),
+        }
+    }
+
+    async fn find(&self) -> Result<Vec<{{ resource_name | pascal_case }}>, DbErr> {
+        let {{ resource_name | snake_case }}s = {{ resource_name | pascal_case }}Entity::find().all(&*self.db).await?;
+        Ok({{ resource_name | snake_case }}s)
+    }
+
+    async fn update(&self, uuid: String, {{ resource_name | snake_case }}: Update{{ resource_name | pascal_case }}Payload) -> Result<{{ resource_name | pascal_case }}, DbErr> {
+        if {{ resource_name | snake_case }}.uuid != uuid.parse().unwrap() {
+            return Err(DbErr::Custom(format!(
+                "Uuid in url {} does not match with uuid in body {}",
+                uuid, {{ resource_name | snake_case }}.uuid
+            )));
+        }
+
+        let current_{{ resource_name | snake_case }} = {{ resource_name | pascal_case }}Entity::find_by_id({{ resource_name | snake_case }}.uuid)
+            .one(&*self.db)
+            .await?;
+        if current_{{ resource_name | snake_case }}.is_none() {
+            return Err(DbErr::RecordNotFound(format!(
+                "{{ resource_name | pascal_case }} with id {} not found",
+                {{ resource_name | snake_case }}.uuid
+            )));
+        }
+
+        let active_{{ resource_name | snake_case }} = {{ resource_name | snake_case }}::ActiveModel {
+            {% for field in fields %}
+            {% if field.name == "created_at" %}
+            {{ field.name }}: Unchanged(current_{{ resource_name | snake_case }}.unwrap().{{ field.name }}),
+            {% elif field.name == "updated_at" %}
+            {{ field.name }}: Set(chrono::Utc::now()),
+            {% else %}
+            {{ field.name }}: Set({{ resource_name | snake_case }}.{{ field.name }}),
+            {% endif %}
+            {% endfor %}
+            ..Default::default()
+        };
+
+        let updated_{{ resource_name | snake_case }} = active_{{ resource_name | snake_case }}.update(&*self.db).await?;
+        Ok(updated_{{ resource_name | snake_case }})
+    }
+
+    async fn delete(&self, uuid: Uuid) -> Result<String, DbErr> {
+        if {{ resource_name | pascal_case }}Entity::find_by_id(uuid).one(&*self.db).await?.is_none() {
+            return Err(DbErr::RecordNotFound(format!("{{ resource_name | pascal_case }} with id {} not found", uuid)));
+        }
+
+        {{ resource_name | pascal_case }}Entity::delete_by_id(uuid).exec(&*self.db).await?;
+        Ok(format!("{{ resource_name | pascal_case }} with id {} deleted", uuid))
+    }
+}

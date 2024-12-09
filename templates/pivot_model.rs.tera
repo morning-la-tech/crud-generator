@@ -1,0 +1,31 @@
+use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Deserialize, Serialize)]
+#[sea_orm(table_name = "{{ pivot_table_name }}")]
+pub struct Model {
+    {% for field in fields %}
+    {% if field.primary_key %}
+    #[sea_orm(primary_key)]
+    {% endif %}
+    pub {{ field.name }}: {{ field.field_type }},
+    {% endfor %}
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::{{ entity_1 | snake_case }}::Entity",
+        from = "Column::{{ entity_1 | pascal_case }}Id",
+        to = "super::{{ entity_1 | snake_case }}::Column::Id"
+    )]
+    {{ entity_1 | pascal_case }},
+    #[sea_orm(
+        belongs_to = "super::{{ entity_2 | snake_case }}::Entity",
+        from = "Column::{{ entity_2 | pascal_case }}Id",
+        to = "super::{{ entity_2 | snake_case }}::Column::Id"
+    )]
+    {{ entity_2 | pascal_case }},
+}
+
+impl ActiveModelBehavior for ActiveModel {}
