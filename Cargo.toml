@@ -1,6 +1,6 @@
 [package]
 name = "crud-generator"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "A Rust tool to generate CRUD files for an HTTP API"
 repository = "https://github.com/morning-la-tech/crud-generator"
