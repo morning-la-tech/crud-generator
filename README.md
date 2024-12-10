@@ -91,12 +91,16 @@ Available field types:
 - `one_to_many`
 - `many_to_many`
 
-### 2. Run the project
-
-Specifying the path to your JSON file:
+### 2. Install cli
 
 ```bash
-cargo run -- ./resource.json
+cargo install crud-generator
+```
+
+### 2. Run the Generator
+
+```bash
+crud-generator ./resource.json
 ```
 
 ### 3. Generated Files
