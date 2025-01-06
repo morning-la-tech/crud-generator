@@ -117,11 +117,11 @@ The generator will output files in your src/ directory:
 
 The generator creates the following REST endpoints:
 
-- `POST /api/{{resource}}` - Create a new resource
-- `GET /api/{{resource}}/{uuid}` - Get a specific resource by UUID
-- `GET /api/{{resource}}` - List all resources
-- `PUT /api/{{resource}}/{uuid}` - Update a specific resource
-- `DELETE /api/{{resource}}/{uuid}` - Delete a specific resource
+- `POST /{{resource}}` - Create a new resource
+- `GET /{{resource}}/{uuid}` - Get a specific resource by UUID
+- `GET /{{resource}}` - List all resources
+- `PUT /{{resource}}/{uuid}` - Update a specific resource
+- `DELETE /{{resource}}/{uuid}` - Delete a specific resource
 
 ### 4. Post-Generation Manual Steps
 

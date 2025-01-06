@@ -18,7 +18,7 @@ async fn create_test_{{ resource_name | snake_case }}(client: &Client) -> (Uuid,
     });
 
     let res = client
-        .post("http://0.0.0.0:8085/api/{{ resource_name | snake_case_to_kebab_case }}s")
+        .post("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s")
         .json(&{{ resource_name | snake_case }}_data)
         .send()
         .await
@@ -51,7 +51,7 @@ async fn test_crud_operations() {
 
     // Test READ (Get by UUID)
     let res = client
-        .get(format!("http://0.0.0.0:8085/api/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
+        .get(format!("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
         .send()
         .await
         .expect("Failed to send request");
@@ -61,7 +61,7 @@ async fn test_crud_operations() {
 
     // Test READ (List all)
     let res = client
-        .get("http://0.0.0.0:8085/api/{{ resource_name | snake_case_to_kebab_case }}s")
+        .get("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s")
         .send()
         .await
         .expect("Failed to send request");
@@ -85,7 +85,7 @@ async fn test_crud_operations() {
 
     });
     let res = client
-        .put(format!("http://0.0.0.0:8085/api/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
+        .put(format!("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
         .json(&update_data)
         .send()
         .await
@@ -104,7 +104,7 @@ async fn test_crud_operations() {
 
     // Test DELETE
     let res = client
-        .delete(format!("http://0.0.0.0:8085/api/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
+        .delete(format!("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
         .send()
         .await
         .expect("Failed to send request");
@@ -112,7 +112,7 @@ async fn test_crud_operations() {
 
     // Verify deletion
     let res = client
-        .get(format!("http://0.0.0.0:8085/api/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
+        .get(format!("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
         .send()
         .await
         .expect("Failed to send request");
