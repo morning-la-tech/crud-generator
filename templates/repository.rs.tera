@@ -1,26 +1,52 @@
 use async_trait::async_trait;
+{% if "POST" in http_methods or "PUT" in http_methods or "GET" in http_methods or "GET ALL" in http_methods %}
 use crate::models::{{ resource_name | snake_case }}::{Model as {{ resource_name | pascal_case }}};
+{% endif %}
 use sea_orm::{DbErr};
-use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set};
+use sea_orm::{DatabaseConnection};
+{% if "PUT" in http_methods or "GET" in http_methods or "GET ALL" in http_methods or "DELETE" in http_methods %}
+use sea_orm::{EntityTrait};
+{% endif %}
+{% if "POST" in http_methods or "PUT" in http_methods %}
+use sea_orm::{Set};
+use sea_orm::{ActiveModelTrait};
 use crate::models::{{ resource_name | snake_case }};
+{% endif %}
+
+{% if "PUT" in http_methods or "GET" in http_methods or "GET ALL" in http_methods or "DELETE" in http_methods %}
 use crate::models::{{ resource_name | snake_case }}::Entity as {{ resource_name | pascal_case }}Entity;
+{% endif %}
 use std::sync::Arc;
+{% if "GET" in http_methods or "DELETE" in http_methods %}
 use sea_orm::prelude::Uuid;
+{% endif %}
 use standard_lib::sea_orm::Repository;
-use crate::payloads::{{ resource_name | snake_case }}_payloads::Update{{ resource_name | pascal_case }}Payload;
+{% if "PUT" in http_methods %}
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Update{{ resource_name | pascal_case }}Payload};
 use sea_orm::Unchanged;
+{% endif %}
 
 #[async_trait]
 pub trait {{ resource_name | pascal_case }}Repository: Send + Sync {
+    {% if "POST" in http_methods %}
     async fn create(&self, {{ resource_name | snake_case }}: {{ resource_name | pascal_case }}) -> Result<{{ resource_name | pascal_case }}, DbErr>;
+    {% endif %}
+    {% if "GET" in http_methods %}
     async fn find_by_uuid(&self, uuid: Uuid) -> Result<{{ resource_name | pascal_case }}, DbErr>;
+    {% endif %}
+    {% if "GET ALL" in http_methods %}
     async fn find(&self) -> Result<Vec<{{ resource_name | pascal_case }}>, DbErr>;
+    {% endif %}
+    {% if "PUT" in http_methods %}
     async fn update(
         &self,
         uuid: String,
         {{ resource_name | snake_case }}: Update{{ resource_name | pascal_case }}Payload,
     ) -> Result<{{ resource_name | pascal_case }}, DbErr>;
+    {% endif %}
+    {% if "DELETE" in http_methods %}
     async fn delete(&self, uuid: Uuid) -> Result<String, DbErr>;
+    {% endif %}
 }
 
 #[derive(Repository)]
@@ -30,6 +56,7 @@ pub struct Concrete{{ resource_name | pascal_case }}Repository {
 
 #[async_trait]
 impl {{ resource_name | pascal_case }}Repository for Concrete{{ resource_name | pascal_case }}Repository {
+    {% if "POST" in http_methods %}
     async fn create(&self, {{ resource_name | snake_case }}: {{ resource_name | pascal_case }}) -> Result<{{ resource_name | pascal_case }}, DbErr> {
         let active_{{ resource_name | snake_case }} = {{ resource_name | snake_case }}::ActiveModel {
             {% for field in fields %}
@@ -39,7 +66,9 @@ impl {{ resource_name | pascal_case }}Repository for Concrete{{ resource_name | 
         let res = active_{{ resource_name | snake_case }}.insert(&*self.db).await?;
         Ok(res)
     }
+    {% endif %}
 
+    {% if "GET" in http_methods %}
     async fn find_by_uuid(&self, uuid: Uuid) -> Result<{{ resource_name | pascal_case }}, DbErr> {
         let {{ resource_name | snake_case }} = {{ resource_name | pascal_case }}Entity::find_by_id(uuid).one(&*self.db).await?;
         match {{ resource_name | snake_case }} {
@@ -47,12 +76,16 @@ impl {{ resource_name | pascal_case }}Repository for Concrete{{ resource_name | 
             None => Err(DbErr::RecordNotFound(format!("{{ resource_name | pascal_case }} with id {} not found", uuid))),
         }
     }
+    {% endif %}
 
+    {% if "GET ALL" in http_methods %}
     async fn find(&self) -> Result<Vec<{{ resource_name | pascal_case }}>, DbErr> {
         let {{ resource_name | snake_case }}s = {{ resource_name | pascal_case }}Entity::find().all(&*self.db).await?;
         Ok({{ resource_name | snake_case }}s)
     }
+    {% endif %}
 
+    {% if "PUT" in http_methods %}
     async fn update(&self, uuid: String, {{ resource_name | snake_case }}: Update{{ resource_name | pascal_case }}Payload) -> Result<{{ resource_name | pascal_case }}, DbErr> {
         if {{ resource_name | snake_case }}.uuid != uuid.parse().unwrap() {
             return Err(DbErr::Custom(format!(
@@ -87,7 +120,9 @@ impl {{ resource_name | pascal_case }}Repository for Concrete{{ resource_name | 
         let updated_{{ resource_name | snake_case }} = active_{{ resource_name | snake_case }}.update(&*self.db).await?;
         Ok(updated_{{ resource_name | snake_case }})
     }
+    {% endif %}
 
+    {% if "DELETE" in http_methods %}
     async fn delete(&self, uuid: Uuid) -> Result<String, DbErr> {
         if {{ resource_name | pascal_case }}Entity::find_by_id(uuid).one(&*self.db).await?.is_none() {
             return Err(DbErr::RecordNotFound(format!("{{ resource_name | pascal_case }} with id {} not found", uuid)));
@@ -96,4 +131,5 @@ impl {{ resource_name | pascal_case }}Repository for Concrete{{ resource_name | 
         {{ resource_name | pascal_case }}Entity::delete_by_id(uuid).exec(&*self.db).await?;
         Ok(format!("{{ resource_name | pascal_case }} with id {} deleted", uuid))
     }
+    {% endif %}
 }

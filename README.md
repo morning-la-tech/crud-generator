@@ -103,6 +103,8 @@ cargo install crud-generator
 crud-generator ./resource.json
 ```
 
+You will be prompted to choose which methods (POST, GET, GET ALL, PUT, DELETE) you want to generate. (That's a multi-select)
+
 ### 3. Generated Files
 
 The generator will output files in your src/ directory:

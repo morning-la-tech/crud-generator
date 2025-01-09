@@ -1,9 +1,16 @@
 use chrono::{DateTime, Utc};
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
-use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload, Update{{ resource_name | pascal_case }}Payload};
+{% if "POST" in http_methods %}
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload};
+{% endif %}
+{% if "PUT" in http_methods %}
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Update{{ resource_name | pascal_case }}Payload};
+{% endif %}
 use utoipa::ToSchema;
+{% if "POST" in http_methods %}
 use uuid::{NoContext, Timestamp};
+{% endif %}
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Deserialize, Serialize, ToSchema)]
 #[sea_orm(table_name = "{{ resource_name | snake_case }}")]
@@ -31,6 +38,7 @@ pub enum Relation {
 
 impl ActiveModelBehavior for ActiveModel {}
 
+{% if "POST" in http_methods %}
 impl From<Create{{ resource_name | pascal_case }}Payload> for Model {
     fn from(payload: Create{{ resource_name | pascal_case }}Payload) -> Self {
         Self {
@@ -46,7 +54,9 @@ impl From<Create{{ resource_name | pascal_case }}Payload> for Model {
         }
     }
 }
+{% endif %}
 
+{% if "PUT" in http_methods %}
 impl From<Update{{ resource_name | pascal_case }}Payload> for Model {
     fn from(payload: Update{{ resource_name | pascal_case }}Payload) -> Self {
         Self {
@@ -60,3 +70,4 @@ impl From<Update{{ resource_name | pascal_case }}Payload> for Model {
         }
     }
 }
+{% endif %}

@@ -1,19 +1,59 @@
 use crate::managers::{{ resource_name | snake_case }}_manager::{{ resource_name | pascal_case }}Manager;
 use crate::models::{{ resource_name | snake_case }}::Model as {{ resource_name | pascal_case }};
+{% if "POST" in http_methods %}
 use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload};
+{% endif %}
+{% if "PUT" in http_methods %}
 use crate::payloads::{{ resource_name | snake_case }}_payloads::{Update{{ resource_name | pascal_case }}Payload};
-use actix_web::{get, http::StatusCode, post, put, delete, web, web::Path, Responder};
+{% endif %}
+use actix_web::{
+    http::StatusCode,
+    {% if "GET" in http_methods or "GET ALL" in http_methods %}
+    get,
+    {% endif %}
+    {% if "POST" in http_methods %}
+    post,
+    {% endif %}
+    {% if "PUT" in http_methods %}
+    put,
+    {% endif %}
+    {% if "DELETE" in http_methods %}
+    delete,
+    {% endif %}
+    web,
+    {% if "GET" in http_methods or "PUT" in http_methods or "DELETE" in http_methods %}
+    web::Path,
+    {% endif %}
+    Responder
+};
 use standard_lib::handlers::respond_json;
 use utoipa::OpenApi;
 use register_routes::{auto_register, generate_register_service};
 
 #[derive(OpenApi)]
 #[openapi(
-    paths(create, find_one, find, update, delete),
-    components(schemas({{ resource_name | pascal_case }}, Create{{ resource_name | pascal_case }}Payload, Update{{ resource_name | pascal_case }}Payload))
+    paths(
+        {% if "POST" in http_methods %}
+        create,
+        {% endif %}
+        {% if "GET" in http_methods %}
+        find_one,
+        {% endif %}
+        {% if "GET ALL" in http_methods %}
+        find,
+        {% endif %}
+        {% if "PUT" in http_methods %}
+        update,
+        {% endif %}
+        {% if "DELETE" in http_methods %}
+        delete,
+        {% endif %}
+        ),
+    components(schemas({{ resource_name | pascal_case }}, {% if "POST" in http_methods %}Create{{ resource_name | pascal_case }}Payload, {% endif %}{% if "PUT" in http_methods %}Update{{ resource_name | pascal_case }}Payload, {% endif %}))
 )]
 pub(super) struct {{ resource_name | pascal_case }}ApiDoc;
 
+{% if "POST" in http_methods %}
 #[utoipa::path(
     summary="POST {{ resource_name | pascal_case }}",
     description="Create {{ resource_name | snake_case_to_kebab_case }}",
@@ -36,7 +76,9 @@ pub async fn create(
         StatusCode::CREATED,
     )
 }
+{% endif %}
 
+{% if "GET" in http_methods %}
 #[utoipa::path(
     summary="GET one {{ resource_name | snake_case }}",
     description="Get one {{ resource_name | snake_case }}",
@@ -68,7 +110,9 @@ pub async fn find_one(
         StatusCode::OK,
     )
 }
+{% endif %}
 
+{% if "GET ALL" in http_methods %}
 #[utoipa::path(
     summary="GET {{ resource_name | plural | snake_case }}",
     description="Get {{ resource_name | plural | snake_case }}",
@@ -90,7 +134,9 @@ pub async fn find(
         StatusCode::OK,
     )
 }
+{% endif %}
 
+{% if "PUT" in http_methods %}
 #[utoipa::path(
     summary="PUT {{ resource_name | pascal_case }}",
     description="Update {{ resource_name | snake_case }}",
@@ -119,7 +165,9 @@ pub async fn update(
         StatusCode::OK,
     )
 }
+{% endif %}
 
+{% if "DELETE" in http_methods %}
 #[utoipa::path(
     summary="DELETE one {{ resource_name | snake_case }}",
     description="Delete one {{ resource_name | snake_case }}",
@@ -151,5 +199,6 @@ pub async fn delete(
         StatusCode::OK,
     )
 }
+{% endif %}
 
 generate_register_service!(["/{{ resource_name | plural | snake_case_to_kebab_case }}", use_scope = true ]);

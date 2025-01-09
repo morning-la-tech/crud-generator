@@ -1,9 +1,19 @@
+{% if "POST" in http_methods or "PUT" in http_methods or "GET" in http_methods or "GET ALL" in http_methods %}
+use crate::models::{{ resource_name | snake_case }}::{Model as {{ resource_name | pascal_case }}};
+{% endif %}
+
 use crate::repositories::{{ resource_name | snake_case }}_repository::{{ resource_name | pascal_case }}Repository;
 use std::sync::Arc;
 use sea_orm::DbErr;
-use crate::models::{{ resource_name | snake_case }}::Model as {{ resource_name | pascal_case }};
-use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload, Update{{ resource_name | pascal_case }}Payload};
+{% if "POST" in http_methods %}
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload};
+{% endif %}
+{% if "PUT" in http_methods %}
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Update{{ resource_name | pascal_case }}Payload};
+{% endif %}
+{% if "GET" in http_methods or "DELETE" in http_methods %}
 use sea_orm::prelude::Uuid;
+{% endif %}
 
 {# {{ resource_name | plural }} #}
 #[derive(Clone)]
@@ -16,6 +26,7 @@ impl {{ resource_name | pascal_case }}Manager {
         {{ resource_name | pascal_case }}Manager { repository }
     }
 
+{% if "POST" in http_methods %}
     pub async fn create(
         &self,
         payload: Create{{ resource_name | pascal_case }}Payload
@@ -25,10 +36,16 @@ impl {{ resource_name | pascal_case }}Manager {
         self.repository.create(new_{{ resource_name | snake_case }}).await
     }
 
+{% endif %}
+
+{% if "GET ALL" in http_methods %}
     pub async fn find(&self) -> Result<Vec<{{ resource_name | pascal_case }}>, DbErr> {
         self.repository.find().await
     }
 
+{% endif %}
+
+{% if "GET" in http_methods %}
     pub async fn find_one(
         &self,
         uuid_{{ resource_name | snake_case }}: String,
@@ -37,7 +54,9 @@ impl {{ resource_name | pascal_case }}Manager {
         self.repository
             .find_by_uuid(uuid).await
     }
+{% endif %}
 
+{% if "PUT" in http_methods %}
     pub async fn update(
         &self,
         uuid: String,
@@ -46,7 +65,9 @@ impl {{ resource_name | pascal_case }}Manager {
         self.repository
             .update(uuid, payload).await
     }
+{% endif %}
 
+{% if "DELETE" in http_methods %}
     pub async fn delete(
         &self,
         uuid_{{ resource_name | snake_case }}: String,
@@ -55,4 +76,5 @@ impl {{ resource_name | pascal_case }}Manager {
         self.repository
             .delete(uuid).await
     }
+{% endif %}
 }

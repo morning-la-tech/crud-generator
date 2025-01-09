@@ -3,14 +3,6 @@ use std::fs::OpenOptions;
 use std::io::{BufWriter, Write};
 use std::path::Path;
 
-fn capitalize(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-    }
-}
-
 pub fn check_if_files_exist(resource_name: &str) -> Result<(), String> {
     let base_path = "./src";
     let files_to_check = vec![
@@ -55,22 +47,13 @@ pub fn check_if_files_exist(resource_name: &str) -> Result<(), String> {
     Ok(())
 }
 
-pub fn append_to_mod_file(folder: &str, resource_name: &str, mod_file_path: &str) {
+pub fn append_to_mod_file(_folder: &str, resource_name: &str, mod_file_path: &str) {
     if Path::new(&mod_file_path).exists() {
         let mut mod_file = OpenOptions::new()
             .append(true)
             .open(&mod_file_path)
             .unwrap();
         writeln!(mod_file, "pub mod {};", resource_name).unwrap();
-        if folder == "models" {
-            writeln!(
-                mod_file,
-                "pub use {}::Model as {};",
-                resource_name,
-                capitalize(resource_name)
-            )
-            .unwrap();
-        }
     } else {
         let mut mod_file = BufWriter::new(File::create(&mod_file_path).unwrap());
         writeln!(mod_file, "pub mod {};", resource_name).unwrap();

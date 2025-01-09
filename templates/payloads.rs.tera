@@ -1,9 +1,14 @@
+{% if "POST" in http_methods or "PUT" in http_methods %}
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 use utoipa::ToSchema;
+{% if "PUT" in http_methods %}
 use uuid::Uuid;
+{% endif %}
+{% endif %}
 
+{% if "POST" in http_methods %}
 #[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
 pub struct Create{{ resource_name | pascal_case }}Payload {
     {% for field in fields %}
@@ -12,7 +17,9 @@ pub struct Create{{ resource_name | pascal_case }}Payload {
     {% endif %}
     {% endfor %}
 }
+{% endif %}
 
+{% if "PUT" in http_methods %}
 #[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
 pub struct Update{{ resource_name | pascal_case }}Payload {
     {% for field in fields %}
@@ -21,3 +28,4 @@ pub struct Update{{ resource_name | pascal_case }}Payload {
     {% endif %}
     {% endfor %}
 }
+{% endif %}

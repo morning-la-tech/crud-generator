@@ -1,4 +1,5 @@
 use inflector::Inflector;
+use inquire::MultiSelect;
 use std::env;
 use std::fs::File;
 use std::process::Command;
@@ -20,6 +21,23 @@ fn main() {
             "\nError: Missing resource JSON file path\nUsage: cargo run -- <path_to_resource_json>"
         );
         std::process::exit(1);
+    }
+
+    // We define options
+    let methods = vec!["POST", "GET", "GET ALL", "PUT", "DELETE"];
+
+    // Ask for multiple selections
+    let selected_methods = MultiSelect::new(
+        "Choose methods to generate :\n/!\\ Careful: if you don't generate ALL methods, tests won't be generated either.",
+        methods,
+    )
+    .prompt()
+    .unwrap_or_else(|_| vec![]); // Default value in case of cancellation
+
+    // Display the result
+    if selected_methods.is_empty() {
+        eprintln!("You didn't select any method.");
+        std::process::exit(0);
     }
 
     let resource_file_path = &args[1];
@@ -62,7 +80,7 @@ fn main() {
     tera.register_filter("snake_case_to_kebab_case", snake_case_to_kebab_case_filter);
 
     generate_migration(&mut tera, &input);
-    generate_files(&mut tera, &input);
+    generate_files(&mut tera, &input, selected_methods);
 
     if let Some(relations) = &input.relations {
         for relation in relations {

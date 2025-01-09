@@ -5,7 +5,7 @@ use std::io::Write;
 use std::path::Path;
 use tera::{Context, Tera};
 
-pub fn generate_files(tera: &mut Tera, input: &Resource) {
+pub fn generate_files(tera: &mut Tera, input: &Resource, selected_methods: Vec<&str>) {
     let mut context = Context::new();
     context.insert("resource_name", &input.resource_name);
 
@@ -18,6 +18,8 @@ pub fn generate_files(tera: &mut Tera, input: &Resource) {
     let empty_relations = vec![];
     let relations = input.relations.as_ref().unwrap_or(&empty_relations);
     context.insert("relations", relations);
+
+    context.insert("http_methods", &selected_methods);
 
     let base_folders = vec!["models", "handlers", "repositories", "managers", "payloads"];
 
@@ -70,8 +72,10 @@ pub fn generate_files(tera: &mut Tera, input: &Resource) {
         &context,
     );
 
-    // Generate test files
-    generate_test_files(tera, &input.resource_name, &context);
+    // Generate test files only if all HTTP methods are selected because it's testing all the methods at once
+    if selected_methods.len() != 5 {
+        generate_test_files(tera, &input.resource_name, &context);
+    }
 }
 
 fn generate_test_files(tera: &mut Tera, resource_name: &str, context: &Context) {
