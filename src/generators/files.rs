@@ -99,7 +99,7 @@ fn generate_test_files(tera: &mut Tera, resource_name: &str, context: &Context) 
     // Update main tests/mod.rs if needed
     let main_mod_path = "./src/tests/mod.rs";
     if !Path::new(main_mod_path).exists() {
-        let mut main_mod_file = File::create(main_mod_path).unwrap();
+        File::create(main_mod_path).unwrap();
     }
 
     append_to_mod_file("src/tests", resource_name, main_mod_path);
