@@ -1,120 +1,208 @@
-use crate::common::setup;
-use reqwest::Client;
-use serde_json::json;
+use crate::app_config::{Container, Router};
+use crate::managers::{{ resource_name | snake_case }}_manager::{{ resource_name | pascal_case }}Manager;
+use crate::models::{{ resource_name | pascal_case }};
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload};
+use crate::payloads::{{ resource_name | snake_case }}_payloads::{Update{{ resource_name | pascal_case }}Payload};
+use crate::repositories::{{ resource_name | snake_case }}_repository::{Mock{{ resource_name | pascal_case }}Repository, {{ resource_name | pascal_case }}Repository};
+use actix_web::http::StatusCode;
+use actix_web::{test, App};
+use mockall::predicate::*;
+use standard_lib::security::get_test_header;
+use std::sync::Arc;
 use uuid::Uuid;
 
-async fn create_test_{{ resource_name | snake_case }}(client: &Client) -> (Uuid, serde_json::Value) {
-    let {{ resource_name | snake_case }}_data = json!({
-        {% for field in fields %}
-            {% if field.field_type != "DateTime<Utc>" and field.name != "uuid" %}
-                "{{ field.name }}": {% if field.field_type == "String" %}"test_{{ field.name }}"
-                {% elif field.field_type == "i32" %}42
-                {% elif field.field_type == "bool" %}true
-                {% elif field.field_type == "f32" %}42.42
-                {% else %}"test_{{ field.name }}"{% endif %}
-                {% if not loop.last %},{% endif %}
-            {% endif %}
-        {% endfor %}
-    });
-
-    let res = client
-        .post("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s")
-        .json(&{{ resource_name | snake_case }}_data)
-        .send()
-        .await
-        .expect("Failed to send request");
-
-    assert_eq!(res.status().as_u16(), 201);
-
-    let {{ resource_name | snake_case }}: serde_json::Value = res.json().await.expect("Failed to read response");
-    let uuid = Uuid::parse_str({{ resource_name | snake_case }}["uuid"].as_str().unwrap()).unwrap();
-
-    (uuid, {{ resource_name | snake_case }})
+fn get_uuid() -> String {
+    "6ac57602-3832-47d7-9f75-cccf6f2371ab".to_string()
 }
 
-#[tokio::test]
-async fn test_crud_operations() {
-    setup().await;
-    let client = Client::new();
+#[actix_rt::test]
+async fn test_create_{{ resource_name | snake_case }}() {
+    let mut mock_repo = Mock{{ resource_name | pascal_case }}Repository::new();
+    mock_repo
+        .expect_create()
+        .once()
+        .returning(|new_resource| Box::pin(async { Ok(new_resource) }));
+    let arc_mock_repository: Arc<dyn {{ resource_name | pascal_case }}Repository> = Arc::new(mock_repo);
 
-    // Test CREATE
-    let (uuid, created_{{ resource_name | snake_case }}) = create_test_{{ resource_name | snake_case }}(&client).await;
-    {% for field in fields %}
-    {% if field.field_type != "DateTime<Utc>" and field.name != "uuid" %}
-            assert_eq!(created_{{ resource_name | snake_case }}["{{ field.name }}"], {% if field.field_type == "String" %}"test_{{ field.name }}"
-        {% elif field.field_type == "i32" %}42
-        {% elif field.field_type == "bool" %}true
-        {% elif field.field_type == "f32" %}42.42
-        {% endif %});
-    {% endif %}
-    {% endfor %}
+    let container = Container {
+        {{ resource_name | snake_case }}_manager: Some({{ resource_name | pascal_case }}Manager::new(arc_mock_repository)),
+        ..Container::default()
+    };
 
-    // Test READ (Get by UUID)
-    let res = client
-        .get(format!("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
-        .send()
-        .await
-        .expect("Failed to send request");
-    assert_eq!(res.status().as_u16(), 200);
-    let {{ resource_name | snake_case }}: serde_json::Value = res.json().await.expect("Failed to read response");
-    assert_eq!({{ resource_name | snake_case }}["uuid"], uuid.to_string());
+    let app = test::init_service(App::new().configure(|conf| {
+        let mut router = Router {
+            container: &container,
+            cfg: conf,
+        };
 
-    // Test READ (List all)
-    let res = client
-        .get("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s")
-        .send()
-        .await
-        .expect("Failed to send request");
-    assert_eq!(res.status().as_u16(), 200);
-    let {{ resource_name | snake_case }}s: Vec<serde_json::Value> = res.json().await.expect("Failed to read response");
-    assert!(!{{ resource_name | snake_case }}s.is_empty());
+        router.{{ resource_name | snake_case }}();
+    }))
+    .await;
 
-    // Test UPDATE
-    let update_data = json!({
-        "uuid": uuid,
+    let payload = Create{{ resource_name | pascal_case }}Payload {
         {% for field in fields %}
-        {% if field.field_type != "DateTime<Utc>" and field.name != "uuid" %}
-            "{{ field.name }}": {% if field.field_type == "String" %}"updated_{{ field.name }}"
-            {% elif field.field_type == "i32" %}100
-            {% elif field.field_type == "bool" %}false
-            {% elif field.field_type == "f32" %}100.100
+            {% if field.field_type == "String" and field.nullable != true %}
+                {{ field.name }}: "test_{{ field.name }}".to_string(){% if not loop.last %},{% endif %}
             {% endif %}
-            {% if not loop.last %},{% endif %}
-        {% endif %}
         {% endfor %}
+        ..Create{{ resource_name | pascal_case }}Payload::default()
+    };
 
-    });
-    let res = client
-        .put(format!("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
-        .json(&update_data)
-        .send()
-        .await
-        .expect("Failed to send request");
-    assert_eq!(res.status().as_u16(), 200);
-    let updated_{{ resource_name | snake_case }}: serde_json::Value = res.json().await.expect("Failed to read response");
+    let req = test::TestRequest::post()
+        .uri("/{{ resource_name | plural | snake_case_to_kebab_case }}")
+        .append_header(get_test_header())
+        .set_json(&payload)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+
+    assert_eq!(resp.status(), StatusCode::CREATED);
+
+    let result: {{ resource_name | pascal_case }} = test::read_body_json(resp).await;
+    
     {% for field in fields %}
-        {% if field.field_type != "DateTime<Utc>" and field.name != "uuid" %}
-    assert_eq!(updated_{{ resource_name | snake_case }}["{{ field.name }}"], {% if field.field_type == "String" %}"updated_{{ field.name }}"
-        {% elif field.field_type == "i32" %}100
-        {% elif field.field_type == "bool" %}false
-        {% elif field.field_type == "f32" %}100.100
-        {% endif %});
+        {% if field.field_type == "String" and field.nullable != true %}
+            assert_eq!(result.{{ field.name }}, "test_{{ field.name }}");
         {% endif %}
     {% endfor %}
+}
 
-    // Test DELETE
-    let res = client
-        .delete(format!("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
-        .send()
-        .await
-        .expect("Failed to send request");
-    assert_eq!(res.status().as_u16(), 200);
+#[actix_rt::test]
+async fn test_get_{{ resource_name | snake_case }}() {
+    let mut mock = Mock{{ resource_name | pascal_case }}Repository::new();
+    mock.expect_find_by_uuid()
+        .with(eq(Uuid::parse_str(&get_uuid()).unwrap()))
+        .returning(move |_| {
+            Box::pin(async {
+                Ok({{ resource_name | pascal_case }} {
+                    uuid: Uuid::parse_str(&get_uuid()).unwrap(),
+                    ..{{ resource_name | pascal_case }}::default()
+                })
+            })
+        });
+    let arc_mock_repository: Arc<dyn {{ resource_name | pascal_case }}Repository> = Arc::new(mock);
 
-    // Verify deletion
-    let res = client
-        .get(format!("http://0.0.0.0:8085/{{ resource_name | snake_case_to_kebab_case }}s/{}", uuid))
-        .send()
-        .await
-        .expect("Failed to send request");
-    assert_eq!(res.status().as_u16(), 404);
+    let container = Container {
+        {{ resource_name | snake_case }}_manager: Some({{ resource_name | pascal_case }}Manager::new(arc_mock_repository)),
+        ..Container::default()
+    };
+
+    let app = test::init_service(App::new().configure(|conf| {
+        let mut router = Router {
+            container: &container,
+            cfg: conf,
+        };
+
+        router.{{ resource_name | snake_case }}();
+    }))
+    .await;
+
+    let req = test::TestRequest::get()
+        .uri(&format!("/{{ resource_name | plural | snake_case_to_kebab_case }}/{}", get_uuid()))
+        .append_header(get_test_header())
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+
+    assert_eq!(resp.status(), StatusCode::OK);
+
+    let result: {{ resource_name | pascal_case }} = test::read_body_json(resp).await;
+    assert_eq!(result.uuid, Uuid::parse_str(&get_uuid()).unwrap());
+}
+
+#[actix_rt::test]
+async fn test_update_{{ resource_name | snake_case }}() {
+    let mut mock = Mock{{ resource_name | pascal_case }}Repository::new();
+
+    mock.expect_find_by_uuid()
+        .with(eq(Uuid::parse_str(&get_uuid()).unwrap()))
+        .returning(move |_| {
+            Box::pin(async {
+                Ok({{ resource_name | pascal_case }} {
+                    uuid: Uuid::parse_str(&get_uuid()).unwrap(),
+                    ..{{ resource_name | pascal_case }}::default()
+                })
+            })
+        });
+
+    mock.expect_update().once().returning(|_, updated_resource| {
+        Box::pin(async {
+            Ok({{ resource_name | pascal_case }} {
+                ..updated_resource.into()
+            })
+        })
+    });
+
+    let arc_mock_repository: Arc<dyn {{ resource_name | pascal_case }}Repository> = Arc::new(mock);
+
+    let container = &Container {
+        {{ resource_name | snake_case }}_manager: Some({{ resource_name | pascal_case }}Manager::new(arc_mock_repository)),
+        ..Container::default()
+    };
+
+    let app = test::init_service(App::new().configure(|conf| {
+        let mut router = Router {
+            container,
+            cfg: conf,
+        };
+        router.{{ resource_name | snake_case }}();
+    }))
+    .await;
+
+    let payload = Update{{ resource_name | pascal_case }}Payload {
+        {% for field in fields %}
+            {% if field.field_type == "String" and field.nullable != true %}
+                {{ field.name }}: "test_{{ field.name }}_updated".to_string(){% if not loop.last %},{% endif %}
+            {% endif %}
+        {% endfor %}
+        ..Update{{ resource_name | pascal_case }}Payload::default()
+
+    };
+
+    let req = test::TestRequest::put()
+        .uri(&format!("/{{ resource_name | plural | snake_case_to_kebab_case }}/{}", get_uuid()))
+        .set_json(&payload)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+
+    assert_eq!(resp.status(), StatusCode::OK);
+
+    let result: {{ resource_name | pascal_case }} = test::read_body_json(resp).await;
+    {% for field in fields %}
+        {% if field.field_type == "String" and field.nullable != true %}
+            assert_eq!(result.{{ field.name }}, "test_{{ field.name }}_updated");
+        {% endif %}
+    {% endfor %}
+}
+
+#[actix_rt::test]
+async fn test_delete_{{ resource_name | snake_case }}() {
+    let mut mock = Mock{{ resource_name | pascal_case }}Repository::new();
+
+    mock.expect_find_by_uuid()
+        .with(eq(Uuid::parse_str(&get_uuid()).unwrap()))
+        .returning(move |_| {
+            Box::pin(async {
+                Ok({{ resource_name | pascal_case }} {
+                    uuid: Uuid::parse_str(&get_uuid()).unwrap(),
+                    ..{{ resource_name | pascal_case }}::default()
+                })
+            })
+        });
+
+    mock.expect_delete()
+        .with(eq(Uuid::parse_str(&get_uuid()).unwrap()))
+        .returning(move |_| {
+            Box::pin(async { Ok(format!("{{ resource_name | pascal_case }} with id {} deleted", get_uuid())) })
+        });
+
+    let arc_mock_repository: Arc<dyn {{ resource_name | pascal_case }}Repository> = Arc::new(mock);
+
+    let manager = {{ resource_name | pascal_case }}Manager::new(arc_mock_repository);
+
+    let result = manager.delete(get_uuid()).await;
+    assert!(result.is_ok());
+
+    let result = result.unwrap();
+    assert_eq!(result, format!("{{ resource_name | pascal_case }} with id {} deleted", get_uuid()));
 }

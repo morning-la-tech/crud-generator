@@ -2,6 +2,7 @@ use async_trait::async_trait;
 {% if "POST" in http_methods or "PUT" in http_methods or "GET" in http_methods or "GET ALL" in http_methods %}
 use crate::models::{{ resource_name | snake_case }}::{Model as {{ resource_name | pascal_case }}};
 {% endif %}
+use mockall::automock;
 use sea_orm::{DbErr};
 use sea_orm::{DatabaseConnection};
 {% if "PUT" in http_methods or "GET" in http_methods or "GET ALL" in http_methods or "DELETE" in http_methods %}
@@ -27,6 +28,7 @@ use sea_orm::Unchanged;
 {% endif %}
 
 #[async_trait]
+#[automock]
 pub trait {{ resource_name | pascal_case }}Repository: Send + Sync {
     {% if "POST" in http_methods %}
     async fn create(&self, {{ resource_name | snake_case }}: {{ resource_name | pascal_case }}) -> Result<{{ resource_name | pascal_case }}, DbErr>;

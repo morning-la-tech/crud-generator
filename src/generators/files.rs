@@ -31,7 +31,7 @@ pub fn generate_files(tera: &mut Tera, input: &Resource, selected_methods: Vec<&
     }
 
     // Create tests directory if it doesn't exist
-    let tests_path = format!("./tests/{}", input.resource_name.to_lowercase());
+    let tests_path = format!("./src/tests/{}", input.resource_name.to_lowercase());
     if !Path::new(&tests_path).exists() {
         create_dir_all(&tests_path).unwrap();
     }
@@ -73,7 +73,7 @@ pub fn generate_files(tera: &mut Tera, input: &Resource, selected_methods: Vec<&
     );
 
     // Generate test files only if all HTTP methods are selected because it's testing all the methods at once
-    if selected_methods.len() != 5 {
+    if selected_methods.len() == 5 {
         generate_test_files(tera, &input.resource_name, &context);
     }
 }
@@ -83,7 +83,7 @@ fn generate_test_files(tera: &mut Tera, resource_name: &str, context: &Context) 
     let rendered = tera
         .render_str(include_str!("../../templates/test.rs.tera"), context)
         .unwrap();
-    let test_path = format!("./tests/{}", resource_name.to_lowercase());
+    let test_path = format!("./src/tests/{}", resource_name.to_lowercase());
     let test_file_path = format!("{}/crud_{}.rs", test_path, resource_name.to_lowercase());
 
     let mut file = File::create(&test_file_path).unwrap();
@@ -97,13 +97,12 @@ fn generate_test_files(tera: &mut Tera, resource_name: &str, context: &Context) 
         .unwrap();
 
     // Update main tests/mod.rs if needed
-    let main_mod_path = "./tests/mod.rs";
+    let main_mod_path = "./src/tests/mod.rs";
     if !Path::new(main_mod_path).exists() {
         let mut main_mod_file = File::create(main_mod_path).unwrap();
-        main_mod_file.write_all(b"pub mod common;\n").unwrap();
     }
 
-    append_to_mod_file("tests", resource_name, main_mod_path);
+    append_to_mod_file("src/tests", resource_name, main_mod_path);
 }
 
 pub fn generate_file(

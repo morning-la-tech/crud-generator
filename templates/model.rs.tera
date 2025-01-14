@@ -12,7 +12,7 @@ use utoipa::ToSchema;
 use uuid::{NoContext, Timestamp};
 {% endif %}
 
-#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Deserialize, Serialize, ToSchema)]
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Deserialize, Serialize, ToSchema, Default)]
 #[sea_orm(table_name = "{{ resource_name | snake_case }}")]
 pub struct Model {
     {% for field in fields %}

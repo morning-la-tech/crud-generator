@@ -53,9 +53,11 @@ pub fn append_to_mod_file(_folder: &str, resource_name: &str, mod_file_path: &st
             .append(true)
             .open(&mod_file_path)
             .unwrap();
-        writeln!(mod_file, "pub mod {};", resource_name).unwrap();
+        writeln!(mod_file, "#[cfg(test)]").unwrap();
+        writeln!(mod_file, "mod {};", resource_name).unwrap();
     } else {
         let mut mod_file = BufWriter::new(File::create(&mod_file_path).unwrap());
-        writeln!(mod_file, "pub mod {};", resource_name).unwrap();
+        writeln!(mod_file, "#[cfg(test)]").unwrap();
+        writeln!(mod_file, "mod {};", resource_name).unwrap();
     }
 }

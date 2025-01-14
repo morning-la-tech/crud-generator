@@ -4,7 +4,7 @@ use crate::models::{{ resource_name | snake_case }}::{Model as {{ resource_name 
 
 use crate::repositories::{{ resource_name | snake_case }}_repository::{{ resource_name | pascal_case }}Repository;
 use std::sync::Arc;
-use sea_orm::DbErr;
+use standard_lib::errors::ApiError;
 {% if "POST" in http_methods %}
 use crate::payloads::{{ resource_name | snake_case }}_payloads::{Create{{ resource_name | pascal_case }}Payload};
 {% endif %}
@@ -30,17 +30,17 @@ impl {{ resource_name | pascal_case }}Manager {
     pub async fn create(
         &self,
         payload: Create{{ resource_name | pascal_case }}Payload
-    ) -> Result<{{ resource_name | pascal_case }}, DbErr> {
+    ) -> Result<{{ resource_name | pascal_case }}, ApiError> {
         let new_{{ resource_name | snake_case }} = {{ resource_name | pascal_case }}::from(payload);
 
-        self.repository.create(new_{{ resource_name | snake_case }}).await
+        self.repository.create(new_{{ resource_name | snake_case }}).await.map_err(ApiError::from)
     }
 
 {% endif %}
 
 {% if "GET ALL" in http_methods %}
-    pub async fn find(&self) -> Result<Vec<{{ resource_name | pascal_case }}>, DbErr> {
-        self.repository.find().await
+    pub async fn find(&self) -> Result<Vec<{{ resource_name | pascal_case }}>, ApiError> {
+        self.repository.find().await.map_err(ApiError::from)
     }
 
 {% endif %}
@@ -49,10 +49,10 @@ impl {{ resource_name | pascal_case }}Manager {
     pub async fn find_one(
         &self,
         uuid_{{ resource_name | snake_case }}: String,
-    ) -> Result<{{ resource_name | pascal_case }}, DbErr> {
+    ) -> Result<{{ resource_name | pascal_case }}, ApiError> {
         let uuid = Uuid::parse_str(&uuid_{{ resource_name | snake_case }}).unwrap_or(Uuid::nil());
         self.repository
-            .find_by_uuid(uuid).await
+            .find_by_uuid(uuid).await.map_err(ApiError::from)
     }
 {% endif %}
 
@@ -61,9 +61,9 @@ impl {{ resource_name | pascal_case }}Manager {
         &self,
         uuid: String,
         payload: Update{{ resource_name | pascal_case }}Payload
-    ) -> Result<{{ resource_name | pascal_case }}, DbErr> {
+    ) -> Result<{{ resource_name | pascal_case }}, ApiError> {
         self.repository
-            .update(uuid, payload).await
+            .update(uuid, payload).await.map_err(ApiError::from)
     }
 {% endif %}
 
@@ -71,10 +71,10 @@ impl {{ resource_name | pascal_case }}Manager {
     pub async fn delete(
         &self,
         uuid_{{ resource_name | snake_case }}: String,
-    ) -> Result<String, DbErr> {
+    ) -> Result<String, ApiError> {
         let uuid = Uuid::parse_str(&uuid_{{ resource_name | snake_case }}).unwrap_or(Uuid::nil());
         self.repository
-            .delete(uuid).await
+            .delete(uuid).await.map_err(ApiError::from)
     }
 {% endif %}
 }

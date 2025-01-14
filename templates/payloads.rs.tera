@@ -9,7 +9,7 @@ use uuid::Uuid;
 {% endif %}
 
 {% if "POST" in http_methods %}
-#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, Validate, ToSchema, Default)]
 pub struct Create{{ resource_name | pascal_case }}Payload {
     {% for field in fields %}
     {% if field.name != "uuid" and field.name != "created_at" and field.name != "updated_at" %}
@@ -20,7 +20,7 @@ pub struct Create{{ resource_name | pascal_case }}Payload {
 {% endif %}
 
 {% if "PUT" in http_methods %}
-#[derive(Debug, Serialize, Deserialize, Validate, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, Validate, ToSchema, Default)]
 pub struct Update{{ resource_name | pascal_case }}Payload {
     {% for field in fields %}
     {% if field.name != "created_at" and field.name != "updated_at" %}
