@@ -82,20 +82,22 @@ pub async fn create(
 #[utoipa::path(
     summary="GET one {{ resource_name | snake_case }}",
     description="Get one {{ resource_name | snake_case }}",
-    params((
-        "uuid"=String,
-        Path,
-        description="{{ resource_name | pascal_case }} database uuid to get"
-    )),
+    params(
+        (
+            "uuid"=String,
+            Path,
+            description="{{ resource_name | pascal_case }} database uuid to get"
+        )
+    ),
     responses(
         (
-        status=OK,
-        description="{{ resource_name | pascal_case }} found successfully",
-        body=Vec<{{ resource_name | pascal_case }}>
+            status=OK,
+            description="{{ resource_name | pascal_case }} found successfully",
+            body=Vec<{{ resource_name | pascal_case }}>
         ),
         (
-        status=NOT_FOUND,
-        description="{{ resource_name | pascal_case }} was not found"
+            status=NOT_FOUND,
+            description="{{ resource_name | pascal_case }} was not found"
         )
     ),
 )]
@@ -118,9 +120,9 @@ pub async fn find_one(
     description="Get {{ resource_name | plural | snake_case }}",
     responses(
         (
-        status=OK,
-        description="{{ resource_name | pascal_case }}s found successfully",
-        body=Vec<{{ resource_name | pascal_case }}>
+            status=OK,
+            description="{{ resource_name | pascal_case }}s found successfully",
+            body=Vec<{{ resource_name | pascal_case }}>
         )
     ),
 )]
@@ -147,9 +149,9 @@ pub async fn find(
     )),
     responses(
         (
-        status=OK,
-        description="{{ resource_name | pascal_case }} updated successfully",
-        body={{ resource_name | pascal_case }}
+            status=OK,
+            description="{{ resource_name | pascal_case }} updated successfully",
+            body={{ resource_name | pascal_case }}
         )
     )
 )]
@@ -178,13 +180,13 @@ pub async fn update(
     )),
     responses(
         (
-        status=OK,
-        description="{{ resource_name | pascal_case }} deleted successfully",
-        body=Vec<{{ resource_name | pascal_case }}>
+            status=OK,
+            description="{{ resource_name | pascal_case }} deleted successfully",
+            body=Vec<{{ resource_name | pascal_case }}>
         ),
         (
-        status=NOT_FOUND,
-        description="{{ resource_name | pascal_case }} was not found"
+            status=NOT_FOUND,
+            description="{{ resource_name | pascal_case }} was not found"
         )
     ),
 )]
